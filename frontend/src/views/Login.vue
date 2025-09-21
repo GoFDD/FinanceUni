@@ -97,24 +97,32 @@
 
 <script setup>
 import { ref } from 'vue'
+import authService from '@/services/authService'
+import { useRouter } from 'vue-router'
 
 const email = ref('')
 const password = ref('')
 const rememberMe = ref(false)
 const showPassword = ref(false)
 const error = ref('')
+const router = useRouter()
 
-const handleLogin = () => {
+const handleLogin = async () => {
   if (!email.value || !password.value) {
     error.value = 'Por favor, preencha todos os campos.'
     return
   }
-  if (error.value) error.value = ''
-  console.log('Login simulado', {
-    email: email.value,
-    password: password.value,
-    rememberMe: rememberMe.value,
-  })
+
+  try {
+    await authService.login({
+      email: email.value,
+      password: password.value,
+    })
+
+    router.push('/dashboard')
+  } catch (err) {
+    error.value = 'Credenciais inválidas. Tente novamente.'
+  }
 }
 
 const togglePassword = () => (showPassword.value = !showPassword.value)
