@@ -11,13 +11,11 @@
         Organize seus gastos, acompanhe metas e desenvolva hábitos financeiros saudáveis enquanto
         estuda.
       </p>
-
       <div
         class="w-3/4 h-64 bg-green-300/80 rounded-xl shadow-lg flex items-center justify-center backdrop-blur-sm"
       >
         <span class="text-green-800">Ilustração / Placeholder</span>
       </div>
-
       <svg
         class="absolute bottom-0 left-0 w-full h-32"
         preserveAspectRatio="none"
@@ -39,6 +37,12 @@
         <h2 class="text-3xl font-bold text-center mb-2">Crie sua conta</h2>
         <p class="text-center text-gray-500 mb-4">Cadastre-se e comece a organizar suas finanças</p>
 
+        <!-- Mensagem de verificação de e-mail -->
+        <div v-if="emailSent" role="alert" class="alert alert-info mb-4">
+          Cadastro realizado! Verifique seu e-mail para confirmar sua conta antes de fazer login.
+        </div>
+
+        <!-- Erro -->
         <div v-if="error" role="alert" class="alert alert-error mb-4">
           {{ error }}
         </div>
@@ -135,9 +139,8 @@
             <label class="label"><span class="label-text">Tipo de usuário</span></label>
             <select v-model="role" class="select select-bordered w-full">
               <option disabled value="">Selecione um tipo</option>
-              <option value="student">Aluno</option>
-              <option value="cliente">Cliente</option>
-              <option value="university">Universidade</option>
+              <option value="student">Estudante</option>
+              <option value="client">Cliente</option>
             </select>
           </div>
 
@@ -163,38 +166,18 @@
             />
           </template>
 
-          <template v-if="role === 'cliente'">
+          <template v-if="role === 'client'">
             <input
               v-model="cpf"
               type="text"
               placeholder="CPF"
+              v-mask="'###.###.###-##'"
               class="input input-bordered w-full"
             />
             <input
               v-model="birth_date"
               type="date"
               placeholder="Data de nascimento"
-              class="input input-bordered w-full"
-            />
-          </template>
-
-          <template v-if="role === 'university'">
-            <input
-              v-model="university_name"
-              type="text"
-              placeholder="Nome da Universidade"
-              class="input input-bordered w-full"
-            />
-            <input
-              v-model="cnpj"
-              type="text"
-              placeholder="CNPJ"
-              class="input input-bordered w-full"
-            />
-            <input
-              v-model="address"
-              type="text"
-              placeholder="Endereço"
               class="input input-bordered w-full"
             />
           </template>
@@ -219,7 +202,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import axios from 'axios'
+import api from '@/services/api'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -236,36 +219,37 @@ const course = ref('')
 const university = ref('')
 const cpf = ref('')
 const birth_date = ref('')
-const university_name = ref('')
-const cnpj = ref('')
-const address = ref('')
 
 // Estados auxiliares
 const error = ref('')
 const loading = ref(false)
 const showPassword = ref(false)
 const showConfirm = ref(false)
+const emailSent = ref(false)
 
 const togglePassword = () => (showPassword.value = !showPassword.value)
 const toggleConfirm = () => (showConfirm.value = !showConfirm.value)
 
 const handleRegister = async () => {
+  error.value = ''
+
   if (!fullName.value || !email.value || !password.value || !confirmPassword.value || !role.value) {
     error.value = 'Por favor, preencha todos os campos obrigatórios.'
     return
   }
+
   if (password.value !== confirmPassword.value) {
     error.value = 'As senhas não coincidem.'
     return
   }
 
   loading.value = true
-  error.value = ''
 
   const payload = {
     name: fullName.value,
     email: email.value,
     password: password.value,
+    password_confirmation: confirmPassword.value,
     role: role.value,
   }
 
@@ -273,27 +257,28 @@ const handleRegister = async () => {
     payload.student_id = student_id.value
     payload.course = course.value
     payload.university = university.value
-  }
-  if (role.value === 'cliente') {
+  } else if (role.value === 'client') {
     payload.cpf = cpf.value
     payload.birth_date = birth_date.value
   }
-  if (role.value === 'university') {
-    payload.university_name = university_name.value
-    payload.cnpj = cnpj.value
-    payload.address = address.value
-  }
 
   try {
-    const response = await axios.post('/api/register', payload)
-    if (response.status === 201 || response.status === 200) {
-      router.push('/login')
-    } else {
-      error.value = 'Erro ao cadastrar, tente novamente.'
-    }
+    await api.post('/register', payload)
+    emailSent.value = true
+
+    // Limpa campos
+    fullName.value = ''
+    email.value = ''
+    password.value = ''
+    confirmPassword.value = ''
+    role.value = ''
+    student_id.value = ''
+    course.value = ''
+    university.value = ''
+    cpf.value = ''
+    birth_date.value = ''
   } catch (err) {
-    console.error(err)
-    error.value = err.response?.data?.message || 'Erro ao cadastrar, tente novamente.'
+    error.value = err.response?.data?.message || 'Erro ao cadastrar usuário.'
   } finally {
     loading.value = false
   }

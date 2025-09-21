@@ -4,15 +4,17 @@ import authService from '@/services/authService'
 import Login from '@/views/Login.vue'
 import Register from '@/views/Register.vue'
 import Dashboard from '@/views/Dashboard.vue'
+import VerifyEmail from '@/views/VerifyEmail.vue' // <- importar
 
 const routes = [
   { path: '/login', name: 'Login', component: Login },
   { path: '/register', name: 'Register', component: Register },
+  { path: '/verify-email/:token', name: 'VerifyEmail', component: VerifyEmail }, // <- nova rota
   {
     path: '/dashboard',
     name: 'Dashboard',
     component: Dashboard,
-    meta: { requiresAuth: true, roles: ['student', 'cliente', 'university'] },
+    meta: { requiresAuth: true, roles: ['student', 'client', 'university'] },
   },
 ]
 

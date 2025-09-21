@@ -4,41 +4,36 @@ namespace App\DTOs\Auth;
 
 class RegisterUserDTO
 {
-    public string $name;
-    public string $email;
-    public string $password;
-    public ?string $role;
+    public function __construct(
+        public string $name,
+        public string $email,
+        public string $password,
+        public string $role,
+        public ?string $student_id = null,
+        public ?string $course = null,
+        public ?string $university = null,
+        public ?string $cpf = null,
+        public ?string $birth_date = null,
+        public ?string $university_name = null,
+        public ?string $cnpj = null,
+        public ?string $address = null,
+    ) {}
 
-    // Student
-    public ?string $course;
-    public ?string $student_id;
-    public ?string $university;
-
-    // Client
-    public ?string $cpf;
-    public ?string $birth_date;
-
-    // University
-    public ?string $university_name;
-    public ?string $cnpj;
-    public ?string $address;
-
-    public function __construct(array $data)
+    public static function fromArray(array $data): self
     {
-        $this->name = $data['name'];
-        $this->email = $data['email'];
-        $this->password = $data['password'];
-        $this->role = $data['role'] ?? 'user';
-
-        $this->course = $data['course'] ?? null;
-        $this->student_id = $data['student_id'] ?? null;
-        $this->university = $data['university'] ?? null;
-
-        $this->cpf = $data['cpf'] ?? null;
-        $this->birth_date = $data['birth_date'] ?? null;
-
-        $this->university_name = $data['university_name'] ?? null;
-        $this->cnpj = $data['cnpj'] ?? null;
-        $this->address = $data['address'] ?? null;
+        return new self(
+            $data['name'],
+            $data['email'],
+            $data['password'],
+            $data['role'],
+            $data['student_id'] ?? null,
+            $data['course'] ?? null,
+            $data['university'] ?? null,
+            $data['cpf'] ?? null,
+            $data['birth_date'] ?? null,
+            $data['university_name'] ?? null,
+            $data['cnpj'] ?? null,
+            $data['address'] ?? null,
+        );
     }
 }
