@@ -1,16 +1,25 @@
 import api from './api'
 
-export async function register(data) {
-  const { data: result } = await api.post('/register', data)
-  return result
-}
+export default {
+  async register(payload) {
+    const { data } = await api.post('/register', payload)
+    return data
+  },
 
-export async function login(data) {
-  const { data: result } = await api.post('/login', data)
-  return result
-}
+  async login(credentials) {
+    const { data } = await api.post('/login', credentials)
+    if (data.token) {
+      localStorage.setItem('auth_token', data.token)
+    }
+    return data
+  },
 
-export async function logout() {
-  const { data: result } = await api.post('/logout')
-  return result
+  async getUser() {
+    const { data } = await api.get('/user')
+    return data
+  },
+
+  async logout() {
+    localStorage.removeItem('auth_token')
+  },
 }
