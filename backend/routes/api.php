@@ -6,7 +6,8 @@ use Illuminate\Http\Request;
 
 // Registro e confirmação
 Route::post('/register', [AuthController::class, 'register']);
-Route::get('/confirm-email/{token}', [AuthController::class, 'confirmEmail']);
+Route::get('/verify-email/{token}', [AuthController::class, 'verifyEmail']);
+Route::post('/resend-verification', [AuthController::class, 'resendVerification']);
 
 // Login
 Route::post('/login', [AuthController::class, 'login']);
@@ -15,7 +16,6 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     
-    // Exemplo de rota protegida (dados do usuário logado)
     Route::get('/user', function (Request $request) {
         return $request->user();
     });

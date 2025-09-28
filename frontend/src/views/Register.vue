@@ -39,7 +39,10 @@
 
         <!-- Mensagem de verificação de e-mail -->
         <div v-if="emailSent" role="alert" class="alert alert-info mb-4">
-          Cadastro realizado! Verifique seu e-mail para confirmar sua conta antes de fazer login.
+          Cadastro realizado! Verifique seu e-mail para confirmar sua conta.
+          <button @click="resendVerification" class="btn btn-sm btn-link text-blue-600">
+            Reenviar e-mail
+          </button>
         </div>
 
         <!-- Erro -->
@@ -202,8 +205,9 @@
 
 <script setup>
 import { ref } from 'vue'
-import api from '@/services/api'
 import { useRouter } from 'vue-router'
+import api from '@/services/api'
+import authService from '@/services/authService'
 
 const router = useRouter()
 
@@ -232,18 +236,19 @@ const toggleConfirm = () => (showConfirm.value = !showConfirm.value)
 
 const handleRegister = async () => {
   error.value = ''
+  loading.value = true
 
   if (!fullName.value || !email.value || !password.value || !confirmPassword.value || !role.value) {
     error.value = 'Por favor, preencha todos os campos obrigatórios.'
+    loading.value = false
     return
   }
 
   if (password.value !== confirmPassword.value) {
     error.value = 'As senhas não coincidem.'
+    loading.value = false
     return
   }
-
-  loading.value = true
 
   const payload = {
     name: fullName.value,
@@ -268,7 +273,6 @@ const handleRegister = async () => {
 
     // Limpa campos
     fullName.value = ''
-    email.value = ''
     password.value = ''
     confirmPassword.value = ''
     role.value = ''
@@ -279,6 +283,26 @@ const handleRegister = async () => {
     birth_date.value = ''
   } catch (err) {
     error.value = err.response?.data?.message || 'Erro ao cadastrar usuário.'
+  } finally {
+    loading.value = false
+  }
+}
+
+const resendVerification = async () => {
+  error.value = ''
+  loading.value = true
+
+  if (!email.value) {
+    error.value = 'Por favor, insira seu e-mail para reenviar a verificação.'
+    loading.value = false
+    return
+  }
+
+  try {
+    await authService.resendVerification(email.value)
+    error.value = 'E-mail de verificação reenviado! Verifique sua caixa de entrada.'
+  } catch (err) {
+    error.value = err.message || 'Erro ao reenviar e-mail.'
   } finally {
     loading.value = false
   }

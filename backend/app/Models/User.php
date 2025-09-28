@@ -5,11 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Laravel\Sanctum\HasApiTokens;
-use App\Notifications\CustomVerifyEmail;
 
-class User extends Authenticatable implements MustVerifyEmail
+class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
@@ -17,7 +15,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'name',
         'email',
         'password',
-        'role', // student, client, university, admin
+        'role', // student, client, university
+        'email_verified_at',
     ];
 
     protected $hidden = [
@@ -25,13 +24,11 @@ class User extends Authenticatable implements MustVerifyEmail
         'remember_token',
     ];
 
-    // Casts automáticos
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'password' => 'hashed', // bcrypt automaticamente
+        'password' => 'hashed',
     ];
 
-    // Relacionamentos
     public function student()
     {
         return $this->hasOne(Student::class);
@@ -45,13 +42,5 @@ class User extends Authenticatable implements MustVerifyEmail
     public function university()
     {
         return $this->hasOne(University::class);
-    }
-
-    /**
-     * Envia notificação de verificação de e-mail
-     */
-    public function sendEmailVerificationNotification()
-    {
-        $this->notify(new CustomVerifyEmail()); 
     }
 }

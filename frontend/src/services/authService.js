@@ -16,7 +16,7 @@ export default {
       localStorage.setItem(TOKEN_KEY, token)
       localStorage.setItem(USER_KEY, JSON.stringify(user))
 
-      //  header Authorization padrão
+      // header Authorization padrão
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`
 
       return user
@@ -69,5 +69,17 @@ export default {
    */
   setUser(user) {
     localStorage.setItem(USER_KEY, JSON.stringify(user))
+  },
+
+  /**
+   * Reenviar e-mail de verificação
+   */
+  async resendVerification(email) {
+    try {
+      const res = await api.post('/resend-verification', { email })
+      return res.data
+    } catch (err) {
+      throw err.response?.data || { message: 'Erro ao reenviar e-mail de verificação' }
+    }
   },
 }

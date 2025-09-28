@@ -6,11 +6,6 @@ use App\Services\AuthService;
 use App\DTOs\Auth\RegisterUserDTO;
 use App\DTOs\Auth\LoginUserDTO;
 use Illuminate\Http\Request;
-use App\Models\PendingUser;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Hash;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Mail;
 
 class AuthController extends Controller
 {
@@ -21,112 +16,87 @@ class AuthController extends Controller
         $this->authService = $authService;
     }
 
-    /**
-     * Registro de usuário pendente
-     */
     public function register(Request $request)
     {
         $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email',
-            'password' => 'required|min:6',
-            'role'     => 'required|in:student,client,university',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'password' => 'required|min:6|confirmed',
+            'role' => 'required|in:student,client,university',
+            'student_id' => 'required_if:role,student|string',
+            'course' => 'required_if:role,student|string',
+            'university' => 'required_if:role,student|string',
+            'cpf' => 'required_if:role,client|string',
+            'birth_date' => 'required_if:role,client|date',
+            'university_name' => 'required_if:role,university|string',
+            'cnpj' => 'required_if:role,university|string',
+            'address' => 'required_if:role,university|string',
         ]);
 
-        $extraFields = match ($request->role) {
-            'student' => [
-                'student_id' => $request->student_id,
-                'course'     => $request->course,
-                'university' => $request->university,
-            ],
-            'client' => [
-                'cpf'        => $request->cpf,
-                'birth_date' => $request->birth_date,
-            ],
-            'university' => [
-                'university_name' => $request->university_name,
-                'cnpj'            => $request->cnpj,
-                'address'         => $request->address,
-            ],
-            default => []
-        };
-
-        // Cria DTO e registra pending user via service
-        $dto = new RegisterUserDTO(
-            $request->name,
-            $request->email,
-            $request->password,
-            $request->role,
-            $extraFields['student_id'],
-            $extraFields['course'] ,
-            $extraFields['university'],
-            $extraFields['cpf'],
-            $extraFields['birth_date'],
-            $extraFields['university_name'],
-            $extraFields['cnpj'],
-            $extraFields['address']
-        );
-
-        $this->authService->registerPendingUser($dto);
-
-        return response()->json(['message' => 'E-mail enviado! Confirme sua conta para ativar.']);
-    }
-
-    /**
-     * Confirmação de e-mail
-     */
-    public function verifyEmail($token)
-    {
         try {
-            $result = $this->authService->confirmEmail($token);
-
-            // Retorna token e user para frontend redirecionar para login
-            return response()->json([
-                'message' => 'E-mail confirmado! Redirecionando para login...',
-                'token'   => $result['token'],
-                'user'    => $result['user'],
-            ]);
-
+            $dto = RegisterUserDTO::fromArray($request->all());
+            $this->authService->registerPendingUser($dto);
+            return response()->json(['message' => 'E-mail enviado! Confirme sua conta para ativar.'], 201);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         }
     }
 
-    /**
-     * Login
-     */
+    public function verifyEmail($token)
+    {
+        try {
+            $result = $this->authService->confirmEmail($token);
+            return response()->json($result, 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
+
     public function login(Request $request)
     {
         $request->validate([
-            'email'    => 'required|email',
+            'email' => 'required|email',
             'password' => 'required',
         ]);
 
-        $dto = new LoginUserDTO(
-            $request->email,
-            $request->password
-        );
+        try {
+            $dto = new LoginUserDTO($request->email, $request->password);
+            $result = $this->authService->login($dto);
 
+            if (!$result) {
+                return response()->json(['message' => 'Credenciais inválidas.'], 401);
+            }
 
-        $result = $this->authService->login($dto);
-
-        if (!$result) {
-            return response()->json(['message' => 'Credenciais inválidas.'], 401);
+            return response()->json($result, 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
         }
-
-        return response()->json($result);
     }
 
-    /**
-     * Logout
-     */
     public function logout(Request $request)
     {
-        $user = $request->user();
-        if ($user) {
-            $this->authService->logout($user);
+        try {
+            $user = $request->user();
+            if ($user) {
+                $this->authService->logout($user);
+            }
+            return response()->json(['message' => 'Logout realizado com sucesso.'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
         }
+    }
 
-        return response()->json(['message' => 'Logout realizado com sucesso.']);
+    public function resendVerification(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        try {
+            $this->authService->resendVerificationEmail($request->email);
+            return response()->json(['message' => 'E-mail de verificação reenviado com sucesso!'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
     }
 }

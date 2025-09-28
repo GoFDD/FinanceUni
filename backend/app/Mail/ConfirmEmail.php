@@ -14,20 +14,12 @@ class ConfirmEmail extends Mailable
     public PendingUser $pendingUser;
     public string $verificationUrl;
 
-    /**
-     * Create a new message instance.
-     */
     public function __construct(PendingUser $pendingUser)
     {
         $this->pendingUser = $pendingUser;
-        // Monta a URL de confirmação usando o token
-        $this->verificationUrl = config('app.frontend_url') . "/verify/{$pendingUser->verification_token}";
-
+        $this->verificationUrl = rtrim(env('FRONTEND_URL', 'http://localhost:5173'), '/') . "/verify-email/{$pendingUser->verification_token}";
     }
 
-    /**
-     * Build the message.
-     */
     public function build(): self
     {
         return $this

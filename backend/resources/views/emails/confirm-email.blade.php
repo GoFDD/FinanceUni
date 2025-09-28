@@ -5,10 +5,6 @@
     <title>Confirmação de E-mail - FinanceUni</title>
 </head>
 <body>
-    <center>
-        <img src="{{ asset('images/logo_financeuni.png') }}" alt="FinanceUni" width="120">
-    </center>
-
     <h2>Olá, {{ $userName }}!</h2>
 
     <p>Obrigado por se cadastrar no <strong>FinanceUni</strong>.</p>
