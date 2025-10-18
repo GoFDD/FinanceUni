@@ -1,22 +1,20 @@
 <template>
-  <div class="bg-[#18181b] border border-[#27272a] rounded-lg p-6 shadow">
-    <div class="flex justify-between items-start">
-      <div>
-        <h3 class="text-sm text-gray-400">{{ titulo }}</h3>
-        <p :class="['text-2xl font-bold mt-2', cor]">{{ valor }}</p>
-        <p class="text-xs text-gray-500 mt-1">{{ subtitulo }}</p>
-      </div>
-      <div class="text-2xl">{{ icone }}</div>
-    </div>
+  <div
+    class="bg-[#1E293B] rounded-xl shadow-md p-4 flex flex-col items-center justify-center text-center hover:shadow-lg transition"
+  >
+    <div class="text-3xl mb-2">{{ icone }}</div>
+    <h3 class="text-lg font-semibold">{{ titulo }}</h3>
+    <p class="text-xl font-bold" :class="cor">{{ valor }}</p>
+    <span class="text-sm text-gray-400">{{ subtitulo }}</span>
   </div>
 </template>
 
 <script setup>
-defineProps({
+const props = defineProps({
   titulo: String,
   valor: String,
   subtitulo: String,
-  cor: String,
   icone: String,
+  cor: String,
 })
 </script>
