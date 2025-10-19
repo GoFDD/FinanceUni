@@ -41,7 +41,7 @@ class AuthService
             'role' => $dto->role,
             'extra_data' => $extraData,
             'verification_token' => Str::uuid(),
-            'expire_at' => now()->addHours(12),
+            'expires_at' => now()->addHours(12),
             'email_confirmed' => false,
         ]);
 
@@ -57,7 +57,7 @@ class AuthService
     public function confirmEmail(string $token): array
     {
         $pending = PendingUser::where('verification_token', $token)
-                            ->where('expire_at', '>=', now())
+                            ->where('expires_at', '>=', now())
                             ->first();
 
         if (!$pending) {
@@ -186,9 +186,9 @@ class AuthService
             throw new \Exception('E-mail já foi confirmado.');
         }
 
-        if ($pendingUser->expire_at < now()) {
+        if ($pendingUser->expires_at < now()) {
             $pendingUser->verification_token = Str::uuid();
-            $pendingUser->expire_at = now()->addHours(12);
+            $pendingUser->expires_at = now()->addHours(12);
             $pendingUser->save();
         }
 
