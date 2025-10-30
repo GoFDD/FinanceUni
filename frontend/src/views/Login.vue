@@ -1,13 +1,13 @@
 <template>
   <div class="min-h-screen flex items-center justify-center p-8">
-    <div class="card shadow-2xl bg-base-100 rounded-xl p-8 w-full max-w-md">
+    <div class="card shadow-2xl bg-white dark:bg-gray-800 dark:border dark:border-gray-700 rounded-xl p-8 w-full max-w-md">
       <div class="flex items-center gap-2 mb-4">
         <span class="text-3xl font-bold text-green-700">💰</span>
-        <span class="text-xl font-semibold text-gray-800">FinanceUni</span>
+        <span class="text-xl font-semibold text-gray-800 dark:text-gray-200">FinanceUni</span>
       </div>
 
-      <h2 class="text-3xl font-bold text-center mb-2">Faça login</h2>
-      <p class="text-center text-gray-500 mb-4">Acesse sua conta para gerenciar suas finanças</p>
+      <h2 class="text-3xl font-bold text-center mb-2 text-gray-800 dark:text-gray-100">Faça login</h2>
+      <p class="text-center text-gray-500 dark:text-gray-400 mb-4">Acesse sua conta para gerenciar suas finanças</p>
 
       <!-- Erro -->
       <div v-if="error" role="alert" class="alert alert-error mb-4">
@@ -28,7 +28,7 @@
         <button
           v-if="error.includes('não confirmado')"
           @click="resendVerification"
-          class="btn btn-sm btn-link text-red-600"
+          class="btn btn-sm btn-link text-red-600 dark:text-red-400"
         >
           Reenviar e-mail de verificação
         </button>
@@ -37,16 +37,18 @@
       <form class="flex flex-col gap-4" @submit.prevent="handleLogin" novalidate>
         <!-- Email -->
         <div class="form-control">
-          <label class="label"><span class="label-text">Email</span></label>
+          <label class="label">
+            <span class="label-text text-gray-700 dark:text-gray-300">Email</span>
+          </label>
           <div class="relative">
             <input
               v-model="email"
               type="email"
               placeholder="seu@exemplo.com"
-              class="input input-bordered w-full pl-10 focus:placeholder-transparent"
+              class="input input-bordered w-full pl-10 focus:placeholder-transparent transition-all duration-200 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
             />
             <span
-              class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+              class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none"
             >
               <font-awesome-icon icon="envelope" />
             </span>
@@ -55,23 +57,25 @@
 
         <!-- Password -->
         <div class="form-control">
-          <label class="label"><span class="label-text">Senha</span></label>
+          <label class="label">
+            <span class="label-text text-gray-700 dark:text-gray-300">Senha</span>
+          </label>
           <div class="relative">
             <input
               v-model="password"
               :type="showPassword ? 'text' : 'password'"
               placeholder="Sua senha"
-              class="input input-bordered w-full pl-10 pr-10 focus:placeholder-transparent"
+              class="input input-bordered w-full pl-10 pr-10 focus:placeholder-transparent transition-all duration-200 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
             />
             <span
-              class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+              class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none"
             >
               <font-awesome-icon icon="lock" />
             </span>
             <button
               type="button"
               @click="togglePassword"
-              class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-600"
+              class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
             >
               <font-awesome-icon :icon="showPassword ? 'eye-slash' : 'eye'" />
             </button>
@@ -82,7 +86,7 @@
         <div class="form-control">
           <label class="label cursor-pointer flex items-center gap-2">
             <input type="checkbox" v-model="rememberMe" class="checkbox checkbox-primary" />
-            <span class="label-text">Lembrar-me</span>
+            <span class="label-text text-gray-700 dark:text-gray-300">Lembrar-me</span>
           </label>
         </div>
 
@@ -96,7 +100,7 @@
         </button>
       </form>
 
-      <p class="text-center text-gray-500 mt-6">
+      <p class="text-center text-gray-500 dark:text-gray-400 mt-6">
         Não tem uma conta?
         <router-link to="/register" class="link link-primary">Cadastre-se</router-link>
       </p>
