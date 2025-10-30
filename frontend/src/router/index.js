@@ -55,6 +55,12 @@ const routes = [
         component: () => import('@/views/dashboard/Bancos.vue'),
         meta: { requiresAuth: true },
       },
+      {
+        path: 'perfil',
+        name: 'DashboardPerfil',
+        component: () => import('@/views/dashboard/Perfil.vue'),
+        meta: { requiresAuth: true },
+      },
     ],
   },
 
