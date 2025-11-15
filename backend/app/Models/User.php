@@ -56,7 +56,9 @@ class User extends Authenticatable
 
     public function achievements()
     {
-        return $this->hasMany(Achievement::class);
+        return $this->belongsToMany(Achievement::class)
+            ->withPivot('progress', 'unlocked_at')
+            ->withTimestamps();
     }
 
     public function xpHistory()
