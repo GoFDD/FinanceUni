@@ -10,16 +10,19 @@ class Achievement extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id',
-        'title',           // nome da conquista (ex: "Primeira meta concluída")
-        'description',     // explicação do que foi alcançado
-        'icon',            // ícone (pode ser o nome do ícone Lucide ou URL)
-        'xp_reward',       // XP recebido
-        'unlocked_at',     // data em que foi desbloqueada
+        'title',
+        'description',
+        'icon',
+        'xp_reward',
+        'rarity',
+        'status',
     ];
 
-    public function user()
+    // RelacionamentoMany-to-Many com User
+    public function users()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsToMany(User::class)
+            ->withPivot('progress', 'unlocked_at')
+            ->withTimestamps();
     }
 }
