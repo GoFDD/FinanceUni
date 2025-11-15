@@ -17,6 +17,11 @@ class User extends Authenticatable
         'password',
         'role', // student, client, university
         'email_verified_at',
+        'xp',
+        'level',
+        'streak',
+        'best_streak',
+        'last_login',
     ];
 
     protected $hidden = [
@@ -27,6 +32,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'last_login' => 'datetime',
     ];
 
     public function student()
@@ -42,5 +48,19 @@ class User extends Authenticatable
     public function university()
     {
         return $this->hasOne(University::class);
+    }
+    public function goals()
+    {
+        return $this->hasMany(Goal::class);
+    }
+
+    public function achievements()
+    {
+        return $this->hasMany(Achievement::class);
+    }
+
+    public function xpHistory()
+    {
+        return $this->hasMany(XpHistory::class);
     }
 }
