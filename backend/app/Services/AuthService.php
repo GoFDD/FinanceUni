@@ -114,6 +114,9 @@ class AuthService
             'password' => $password,
             'role' => $dto->role,
             'email_verified_at' => now(),
+            'streak' => 0,
+            'best_streak' => 0,
+            'last_login' => null,
         ]);
 
         if ($dto->role === 'student' && $dto->student_id && $dto->course && $dto->university) {
@@ -149,7 +152,7 @@ class AuthService
     {
         $user = User::where('email', $dto->email)->first();
 
-        if (!$user) {
+        if (!$user || !Hash::check($dto->password, $user->password)) {
             return null;
         }
 
@@ -157,17 +160,17 @@ class AuthService
             throw new \Exception('E-mail não confirmado.');
         }
 
-        if (!Hash::check($dto->password, $user->password)) {
-            return null;
-        }
+        // Atualiza XP e streak
+        app(\App\Services\GamificationService::class)->handleDailyLogin($user);
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return [
             'token' => $token,
-            'user' => $user,
+            'user' => $user->fresh(), // força recarregar dados atualizados
         ];
     }
+
 
     public function logout(User $user): void
     {

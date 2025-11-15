@@ -82,4 +82,16 @@ export default {
       throw err.response?.data || { message: 'Erro ao reenviar e-mail de verificação' }
     }
   },
+
+  /**
+   * Retorna a streak atual do usuário logado
+   */
+  async getUserStreak() {
+    try {
+      const res = await api.get('/user/streak')
+      return res.data
+    } catch (err) {
+      throw err.response?.data || { message: 'Erro ao buscar streak do usuário' }
+    }
+  },
 }

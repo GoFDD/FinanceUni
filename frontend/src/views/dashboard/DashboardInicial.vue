@@ -13,15 +13,26 @@
           <span class="bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full text-sm font-medium">
             {{ user.xp }} XP
           </span>
+          <p class="text-sm text-gray-400">
+          {{ user.xp - totalXpForCurrentLevel }} / {{ xpToNextLevel }} XP para o próximo nível
+        </p>
+
         </div>
       </div>
 
       <!-- Barra de XP -->
       <div class="mt-4 w-full">
-        <div class="w-full h-3 bg-slate-800 rounded-full overflow-hidden">
+        <div class="relative w-full h-4 bg-slate-800 rounded-full overflow-hidden shadow-inner">
           <div
-            class="h-full bg-gradient-to-r from-emerald-500 to-blue-500 transition-all duration-700"
-            :style="{ width: user.progress + '%' }"
+            class="h-full bg-gradient-to-r from-emerald-400 via-blue-500 to-cyan-400
+                  transition-all duration-1000 ease-out shadow-md"
+            :style="{ width: xpProgress + '%' }"
+          ></div>
+
+          <!-- Brilho leve de movimento -->
+          <div
+            class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent
+                  animate-[shine_3s_linear_infinite]"
           ></div>
         </div>
       </div>
@@ -143,82 +154,97 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { Trophy, PiggyBank, Plane, Gamepad2, Shield, Wallet } from 'lucide-vue-next'
+import { ref, onMounted, computed } from 'vue'
+import AuthService from '@/services/authService'
+import { Trophy, PiggyBank, Gamepad2, Wallet } from 'lucide-vue-next'
 
-// Mock de usuário
+// ====== ESTADOS ======
 const user = ref({
-  name: 'Julio Cesar',
-  level: 6,
-  xp: 2450,
-  progress: 70,
-  title: 'Mestre do Dinheiro',
+  name: '',
+  level: 0,
+  xp: 0,
+  title: '',
 })
 
-// Cards Resumo
-const cardsResumo = [
-  { titulo: 'Saldo Total', valor: 'R$ 45.280', subtitulo: '+12.5% vs mês anterior', icone: Wallet },
-  { titulo: 'Metas Ativas', valor: '4', subtitulo: '2 concluídas', icone: PiggyBank },
-  { titulo: 'Conquistas', valor: '7', subtitulo: 'De 15 totais', icone: Trophy },
-  { titulo: 'Streak', valor: '5 dias', subtitulo: 'Maior sequência: 8 dias', icone: Gamepad2 },
-]
+const streak = ref({
+  streak: 0,
+  best_streak: 0,
+  last_login: null,
+})
 
-// Metas mock
-const metas = [
-  {
-    nome: 'Fundo de Emergência',
-    icone: Shield,
-    atual: 'R$ 7.500',
-    meta: 'R$ 10.000',
-    restante: 'R$ 2.500',
-    percentual: 75,
-    recompensaXP: 500,
-    recompensaNome: 'Auxilio Emergencial',
-  },
-  {
-    nome: 'Viagem de Férias',
-    icone: Plane,
-    atual: 'R$ 3.200',
-    meta: 'R$ 5.000',
-    restante: 'R$ 1.800',
-    percentual: 64,
-    recompensaXP: 350,
-    recompensaNome: 'Andarilho',
-  },
-  {
-    nome: 'Nova TV',
-    icone: Gamepad2,
-    atual: 'R$ 1.000',
-    meta: 'R$ 3.000',
-    restante: 'R$ 2.000',
-    percentual: 33,
-    recompensaXP: 200,
-    recompensaNome: 'Buff do entretenimento',
-  },
-]
+const metas = ref([])
+const conquistas = ref([])
+const loading = ref(true)
 
-// Conquistas mock
-const conquistas = [
+// ====== CÁLCULO DE PROGRESSO ======
+
+// XP necessário para atingir o próximo nível (exponencial)
+const xpToNextLevel = computed(() => 1000 * Math.pow(2, user.value.level - 1))
+
+// XP total necessário até o nível atual (somando os anteriores)
+const totalXpForCurrentLevel = computed(() => {
+  if (user.value.level <= 1) return 0
+  return 1000 * (Math.pow(2, user.value.level - 1) - 1)
+})
+
+// Progresso percentual dentro do nível atual
+const xpProgress = computed(() => {
+  const xpInLevel = user.value.xp - totalXpForCurrentLevel.value
+  const progress = (xpInLevel / xpToNextLevel.value) * 100
+  return Math.min(Math.max(progress, 0), 100)
+})
+
+
+// ====== BUSCA DE DADOS ======
+onMounted(async () => {
+  try {
+    const currentUser = await AuthService.getUser()
+    if (currentUser) {
+      user.value = currentUser
+    }
+
+    const streakData = await AuthService.getUserStreak()
+    streak.value = streakData
+
+  } catch (error) {
+    console.error('Erro ao carregar dados do usuário:', error)
+  } finally {
+    loading.value = false
+  }
+})
+
+// ====== CARDS RESUMO ======
+const cardsResumo = computed(() => [
   {
-    nome: 'Primeira Meta',
-    descricao: 'Complete sua primeira meta',
-    status: 'completo',
-    statusLabel: 'Completa',
-    icone: Trophy,
+    titulo: 'Saldo Total',
+    valor: 'R$ 45.280',
+    subtitulo: '+12.5% vs mês anterior',
+    icone: Wallet,
   },
   {
-    nome: 'Poupador Constante',
-    descricao: 'Economize por 7 dias seguidos',
-    status: 'progresso',
-    statusLabel: 'Em progresso',
+    titulo: 'Metas Ativas',
+    valor: '4',
+    subtitulo: '2 concluídas',
     icone: PiggyBank,
   },
   {
-    nome: 'Explorador Financeiro',
-    descricao: 'Crie 5 metas diferentes',
-    status: 'bloqueado',
-    statusLabel: 'Bloqueada',
-    icone: Plane,
+    titulo: 'Conquistas',
+    valor: '7',
+    subtitulo: 'De 15 totais',
+    icone: Trophy,
   },
-]
+  {
+    titulo: 'Streak',
+    valor: `Dia ${streak.value.streak} `,
+    subtitulo: `Melhor sequência: ${streak.value.best_streak} dias`,
+    icone: Gamepad2,
+  },
+])
 </script>
+
+<style scoped>
+@keyframes shine {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+</style>
