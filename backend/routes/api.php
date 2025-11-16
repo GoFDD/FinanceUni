@@ -4,19 +4,20 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GamificationController;
+use App\Http\Controllers\PluggyController;
 use Illuminate\Http\Request;
 
 // ==========================================
 // ROTAS PÚBLICAS (sem autenticação)
 // ==========================================
 
-// Autenticação
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+    // Autenticação
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/login', [AuthController::class, 'login']);
 
-// Verificação de e-mail
-Route::get('/verify-email/{token}', [AuthController::class, 'verifyEmail']);
-Route::post('/resend-verification', [AuthController::class, 'resendVerification']);
+    // Verificação de e-mail
+    Route::get('/verify-email/{token}', [AuthController::class, 'verifyEmail']);
+    Route::post('/resend-verification', [AuthController::class, 'resendVerification']);
 
 // ==========================================
 // ROTAS PROTEGIDAS (requer autenticação)
@@ -69,4 +70,13 @@ Route::middleware('auth:sanctum')->group(function () {
         // Conquistas
         Route::get('/achievements', [GamificationController::class, 'listAchievements']);
     });
+
+    // Pluggy
+    Route::prefix('pluggy')->group(function () {
+        Route::get('/connect-token', [PluggyController::class, 'generateConnectToken']);
+        Route::post('/save-item', [PluggyController::class, 'saveItem']);
+        Route::get('/accounts', [PluggyController::class, 'listUserAccounts']);
+        Route::delete('/accounts/{accountId}', [PluggyController::class, 'deleteAccount']);
+    });
+
 });

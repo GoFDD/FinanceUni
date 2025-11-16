@@ -34,5 +34,9 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+    'pluggy' => [
+    'client_id' => env('PLUGGY_CLIENT_ID'),
+    'client_secret' => env('PLUGGY_CLIENT_SECRET'),
+    ],
 
 ];
