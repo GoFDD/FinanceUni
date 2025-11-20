@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GamificationController;
 use App\Http\Controllers\PluggyController;
+use App\Http\Controllers\TransactionController;
 use Illuminate\Http\Request;
 
 // ==========================================
@@ -77,6 +78,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/save-item', [PluggyController::class, 'saveItem']);
         Route::get('/accounts', [PluggyController::class, 'listUserAccounts']);
         Route::delete('/accounts/{accountId}', [PluggyController::class, 'deleteAccount']);
+    });
+
+    // Receitas
+    Route::prefix('receitas')->group(function () {
+        Route::get('/', [TransactionController::class, 'index']);
+        Route::post('/', [TransactionController::class, 'store']);
+        Route::get('/{id}', [TransactionController::class, 'show']);
+        Route::put('/{id}', [TransactionController::class, 'update']);
+        Route::delete('/{id}', [TransactionController::class, 'destroy']);
     });
 
 });
