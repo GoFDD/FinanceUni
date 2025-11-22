@@ -14,5 +14,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             AchievementsSeeder::class,
         ]);
+        $this->call([
+            CategorySeeder::class,
+        ]);
     }
 }

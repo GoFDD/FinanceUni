@@ -313,7 +313,6 @@ async function loadDashboard() {
     metas.value = data.metas
     resumo.value = data.resumo
 
-    console.log('✅ Dashboard carregado com sucesso:', data)
   } catch (err) {
     console.error('❌ Erro ao carregar dashboard:', err)
     error.value = err.message || 'Erro ao carregar dashboard'
@@ -333,10 +332,8 @@ async function completarMeta(goalId) {
     const response = await DashboardService.completeGoal(goalId)
     console.log('✅ Meta completada:', response)
     
-    // Recarrega o dashboard para atualizar os dados
     await loadDashboard()
     
-    // Você pode adicionar uma notificação de sucesso aqui
     alert(`Meta completada! Você ganhou ${response.xp_earned} XP!`)
   } catch (err) {
     console.error('❌ Erro ao completar meta:', err)

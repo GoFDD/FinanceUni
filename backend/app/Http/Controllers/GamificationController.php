@@ -6,9 +6,9 @@ use Illuminate\Http\Request;
 use App\Models\Goal;
 use App\Models\Achievement;
 use App\Models\XpHistory;
-use App\DTO\GoalDTO;
-use App\DTO\AchievementDTO;
-use App\DTO\XpHistoryDTO;
+use App\DTOs\XpHistoryDTO;
+use App\DTOs\GoalDTO;
+use App\DTOs\AchievementDTO;
 use Illuminate\Support\Facades\Auth;
 
 class GamificationController extends Controller

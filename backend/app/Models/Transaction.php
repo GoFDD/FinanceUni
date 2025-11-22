@@ -47,4 +47,5 @@ class Transaction extends Model
     {
         return $query->where('user_id', $userId);
     }
+
 }

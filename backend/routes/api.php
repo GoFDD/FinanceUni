@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GamificationController;
 use App\Http\Controllers\PluggyController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\CategoryController;
 use Illuminate\Http\Request;
 
 // ==========================================
@@ -80,13 +81,19 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/accounts/{accountId}', [PluggyController::class, 'deleteAccount']);
     });
 
-    // Receitas
-    Route::prefix('receitas')->group(function () {
-        Route::get('/', [TransactionController::class, 'index']);
-        Route::post('/', [TransactionController::class, 'store']);
-        Route::get('/{id}', [TransactionController::class, 'show']);
-        Route::put('/{id}', [TransactionController::class, 'update']);
-        Route::delete('/{id}', [TransactionController::class, 'destroy']);
-    });
+    // TRANSACTIONS
+    Route::get('/transactions', [TransactionController::class, 'index']);
+    Route::post('/transactions', [TransactionController::class, 'store']);
+    Route::put('/transactions/{id}', [TransactionController::class, 'update']);
+    Route::delete('/transactions/{id}', [TransactionController::class, 'destroy']);
+
+    // SUMMARY
+    Route::get('/transactions/expense-summary', [TransactionController::class, 'expenseSummary']);
+
+    // CATEGORIES
+    Route::get('/categories', [CategoryController::class, 'index']);
+    Route::post('/categories', [CategoryController::class, 'store']);
+    Route::put('/categories/{id}', [CategoryController::class, 'update']);
+    Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
 
 });
