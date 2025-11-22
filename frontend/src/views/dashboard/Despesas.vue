@@ -297,7 +297,7 @@ async function carregarCategorias() {
 
 async function carregarXp() {
   try {
-    const d = await dashboardService.getGamificationDashboard();
+    const d = await dashboardService.getDashboardData();
 
     const totalXp = d.user.xp ?? 0;
     nivel.value = d.user.level;

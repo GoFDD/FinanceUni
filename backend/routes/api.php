@@ -58,20 +58,27 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // ========== DASHBOARD ==========
     Route::get('/dashboard', [DashboardController::class, 'index']);
-    
+    Route::post('/goals', [GamificationController::class, 'createUserGoal']);
+
     // ========== GAMIFICAÇÃO ==========
-    Route::prefix('gamification')->group(function () {
-        // Dashboard de gamificação (detalhado)
-        Route::get('/dashboard', [GamificationController::class, 'getDashboard']);
-        
-        // Metas
-        Route::get('/system-goals', [GamificationController::class, 'listSystemGoals']);
-        Route::get('/user-goals', [GamificationController::class, 'listUserGoals']);
-        Route::post('/goals/{goal}/complete', [GamificationController::class, 'completeGoal']);
-        
-        // Conquistas
-        Route::get('/achievements', [GamificationController::class, 'listAchievements']);
-    });
+Route::prefix('gamification')->group(function () {
+
+    // Listar conquistas
+    Route::get('/achievements', [GamificationController::class, 'listAchievements']);
+
+    // Coletar recompensa de conquista
+    Route::post('/achievements/{id}/unlock', [GamificationController::class, 'unlock']);
+
+    // Listar metas
+    Route::get('/goals', [GamificationController::class, 'listGoals']);
+
+    // Completar meta
+    Route::post('/goals/{id}/complete', [GamificationController::class, 'completeGoal']);
+
+    // Criar meta pessoal
+    Route::post('/goals', [GamificationController::class, 'createUserGoal']);
+});
+
 
     // Pluggy
     Route::prefix('pluggy')->group(function () {

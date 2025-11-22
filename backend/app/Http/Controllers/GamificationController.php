@@ -3,143 +3,175 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Goal;
 use App\Models\Achievement;
-use App\Models\XpHistory;
-use App\DTOs\XpHistoryDTO;
-use App\DTOs\GoalDTO;
-use App\DTOs\AchievementDTO;
+use App\Models\Goal;
 use Illuminate\Support\Facades\Auth;
+use App\Services\GamificationService;
 
 class GamificationController extends Controller
 {
-    // Retorna dados do dashboard (usuário, metas e conquistas)
-    public function getDashboard()
+    protected $gamification;
+
+    public function __construct(GamificationService $gamification)
     {
-        $user = Auth::user();
-
-        // Metas do sistema (gamificação)
-        $systemGoals = Goal::systemGoals()->get()
-            ->map(fn($g) => new GoalDTO(array_merge(
-                $g->toArray(),
-                ['progress' => $g->progress]
-            )));
-
-        // Metas pessoais do usuário
-        $userGoals = Goal::userGoals($user->id)->get()
-            ->map(fn($g) => new GoalDTO(array_merge(
-                $g->toArray(),
-                ['progress' => $g->progress]
-            )));
-
-        // Conquistas disponíveis
-        $achievements = Achievement::all()
-            ->map(fn($a) => new AchievementDTO($a->toArray()));
-
-        // XP total do usuário
-        $xpHistory = XpHistory::where('user_id', $user->id)->get();
-        $totalXp = $xpHistory->sum('amount');
-
-        return response()->json([
-            'user' => [
-                'name' => $user->name,
-                'level' => $this->calculateLevel($totalXp),
-                'xp' => $totalXp,
-                'streak' => $this->calculateStreak($user->id),
-            ],
-            'system_goals' => $systemGoals,
-            'user_goals' => $userGoals,
-            'achievements' => $achievements
-        ]);
+        $this->gamification = $gamification;
     }
 
-    // Completa uma meta do sistema
-    public function completeGoal(Request $request, int $goalId)
-    {
-        $user = Auth::user();
-
-        $goal = Goal::where('id', $goalId)
-            ->where('user_id', $user->id)
-            ->where('is_system_goal', true)
-            ->firstOrFail();
-
-        if ($goal->status === 'completed') {
-            return response()->json(['message' => 'Meta já concluída'], 400);
-        }
-
-        $goal->status = 'completed';
-        $goal->current_value = $goal->target_value;
-        $goal->save();
-
-        // Adiciona XP
-        if ($goal->xp_reward > 0) {
-            XpHistory::create([
-                'user_id' => $user->id,
-                'goal_id' => $goal->id,
-                'amount' => $goal->xp_reward,
-                'description' => "XP ganho ao completar a meta: {$goal->title}"
-            ]);
-        }
-
-        // Cria conquista associada
-        if ($goal->grants_achievement) {
-            Achievement::create([
-                'user_id' => $user->id,
-                'title' => "Conquista: {$goal->title}",
-                'description' => "Você completou a meta '{$goal->title}'",
-                'xp_reward' => $goal->xp_reward,
-                'status' => 'unlocked'
-            ]);
-        }
-
-        return response()->json([
-            'message' => 'Meta concluída com sucesso',
-            'goal' => new GoalDTO($goal->toArray())
-        ]);
-    }
-
-    //  calcula nível do usuário
-    private function calculateLevel(int $xp): int
-    {
-        return intdiv($xp, 1000) + 1; // 1000 XP por nível
-    }
-
-    //  calcula streak de login do usuário
-    private function calculateStreak(int $userId): int
-    {
-        return 5; 
-    }
-
-    // Lista todas metas do sistema
-    public function listSystemGoals()
-    {
-        return Goal::systemGoals()->get();
-    }
-
-    // Lista metas do usuário 
-    public function listUserGoals()
-    {
-        $user = Auth::user();
-        return Goal::userGoals($user->id)->get();
-    }
-
-    // Lista conquistas do usuário 
+    /**
+     * Listar conquistas do usuário (retorna progresso + unlocked_at)
+     */
     public function listAchievements()
     {
         $user = Auth::user();
-        return Achievement::where('user_id', $user->id)->get();
+
+        $achievements = Achievement::all()->map(function ($achievement) use ($user) {
+
+            $pivot = $user->achievements()
+                ->where('achievement_id', $achievement->id)
+                ->first();
+
+            $hasAchievement = $pivot !== null;
+
+            $progress = $hasAchievement ? ($pivot->pivot->progress ?? 0) : 0;
+            $unlockedAt = $hasAchievement ? $pivot->pivot->unlocked_at : null;
+
+            // status: se já coletou -> completo; se progress >= 100 e não coletou -> progresso; se progress > 0 -> progresso; else bloqueado
+            if ($unlockedAt !== null) {
+                $status = 'completo';
+                $statusLabel = 'Completo';
+            } elseif ($progress >= 100) {
+                $status = 'progresso';
+                $statusLabel = 'Em progresso';
+            } elseif ($progress > 0) {
+                $status = 'progresso';
+                $statusLabel = 'Em progresso';
+            } else {
+                $status = 'bloqueado';
+                $statusLabel = 'Bloqueado';
+            }
+
+            return [
+                'id' => $achievement->id,
+                'nome' => $achievement->title,
+                'descricao' => $achievement->description,
+                'icone' => $achievement->icon ?? 'Trophy',
+                'xp_reward' => $achievement->xp_reward,
+                'rarity' => $achievement->rarity,
+                'progress' => $progress,
+                'status' => $status,
+                'statusLabel' => $statusLabel,
+                'unlocked_at' => $unlockedAt,
+            ];
+        });
+
+        return response()->json($achievements);
     }
 
-    public function getStreak()
+    /**
+     * Coletar / desbloquear conquista (manual)
+     */
+    public function unlock(Request $request, int $achievementId)
     {
         $user = Auth::user();
 
+        // Retorna array com informação de xp dado
+        $result = $this->gamification->unlockAchievement($user->id, $achievementId);
+
+        return response()->json($result);
+    }
+
+    /**
+     * Listar metas do usuário (system + user)
+     */
+    public function listGoals()
+    {
+        $user = Auth::user();
+
+        // Metas do sistema
+        $systemGoals = Goal::systemGoals()
+            ->where('status', '!=', 'completed')
+            ->get();
+
+        // Metas do usuário
+        $userGoals = Goal::userGoals($user->id)
+            ->where('status', '!=', 'completed')
+            ->get();
+
+        $goals = $systemGoals->merge($userGoals)->map(function ($goal) use ($user) {
+
+            $progressPercent = min($goal->progress, 100);
+            $restante = max($goal->target_value - $goal->current_value, 0);
+
+            return [
+                'id'          => $goal->id,
+                'nome'        => $goal->title,
+                'categoria'   => $goal->category,
+                'percentual'  => round($progressPercent, 2),
+                'atual'       => number_format($goal->current_value, 2, ',', '.'),
+                'meta'        => number_format($goal->target_value, 2, ',', '.'),
+                'restante'    => number_format($restante, 2, ',', '.'),
+                'recompensaXP'=> $goal->xp_reward,
+                'tipo'        => $goal->is_system_goal ? 'sistema' : 'pessoal',
+            ];
+        });
+
+        return response()->json($goals);
+    }
+
+    /**
+     * Completar meta (system goal)
+     */
+    public function completeGoal(int $goalId)
+    {
+        $user = Auth::user();
+
+        $goal = $this->gamification->completeGoal($user->id, $goalId);
+
+        // Opcional: desbloquear conquista "Meta Concluída" (ID fixo conforme seed)
+        // $this->gamification->markAchievementProgress($user->id, X);
+
         return response()->json([
-            'streak' => $user->streak,
-            'best_streak' => $user->best_streak,
-            'last_login' => $user->last_login,
-            'message' => "Você está com uma sequência de {$user->streak} dia(s)! Seu recorde é {$user->best_streak}."
+            'message' => 'Meta completada com sucesso!',
+            'goal'    => $goal
         ]);
     }
 
+    /**
+     * Criar meta pessoal (user goal) — AO CRIAR, marcamos progresso na conquista "Primeira Meta Criada"
+     */
+    public function createUserGoal(Request $request)
+    {
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'target_value' => 'required|numeric|min:1',
+            'category' => 'nullable|string|max:50',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $goal = Goal::create([
+            'user_id' => $user->id,
+            'is_system_goal' => false,
+            'title' => $validated['title'],
+            'category' => $validated['category'] ?? null,
+            'target_value' => $validated['target_value'],
+            'current_value' => 0,
+            'xp_reward' => 0,
+            'grants_achievement' => false,
+            'start_date' => $validated['start_date'],
+            'end_date' => $validated['end_date'],
+            'status' => 'active',
+        ]);
+
+        // SÓ marca o progresso (100%) — unlocked_at permanece null (usuário deve clicar para coletar)
+        $FIRST_GOAL_ACHIEVEMENT_ID = 2;
+        $this->gamification->markAchievementProgress($user->id, $FIRST_GOAL_ACHIEVEMENT_ID, 100);
+
+        return response()->json([
+            'message' => 'Meta criada com sucesso',
+            'goal' => $goal
+        ]);
+    }
 }
