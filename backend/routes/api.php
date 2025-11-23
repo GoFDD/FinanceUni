@@ -7,6 +7,7 @@ use App\Http\Controllers\GamificationController;
 use App\Http\Controllers\PluggyController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ReportController;
 use Illuminate\Http\Request;
 
 // ==========================================
@@ -65,16 +66,12 @@ Route::prefix('gamification')->group(function () {
 
     // Listar conquistas
     Route::get('/achievements', [GamificationController::class, 'listAchievements']);
-
     // Coletar recompensa de conquista
     Route::post('/achievements/{id}/unlock', [GamificationController::class, 'unlock']);
-
     // Listar metas
     Route::get('/goals', [GamificationController::class, 'listGoals']);
-
     // Completar meta
     Route::post('/goals/{id}/complete', [GamificationController::class, 'completeGoal']);
-
     // Criar meta pessoal
     Route::post('/goals', [GamificationController::class, 'createUserGoal']);
 });
@@ -103,4 +100,7 @@ Route::prefix('gamification')->group(function () {
     Route::put('/categories/{id}', [CategoryController::class, 'update']);
     Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
 
+    // REPORTS
+    Route::get("/reports/categories", [ReportController::class, "categories"]);
+    Route::get("/reports", [ReportController::class, "report"]);
 });
