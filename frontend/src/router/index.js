@@ -61,6 +61,12 @@ const routes = [
         component: () => import('@/views/dashboard/Perfil.vue'),
         meta: { requiresAuth: true },
       },
+      {
+        path: 'planos',
+        name: 'DashboardPlanos',
+        component: () => import('@/views/dashboard/Planos.vue'),
+        meta: { requiresAuth: true },
+      },
     ],
   },
 
