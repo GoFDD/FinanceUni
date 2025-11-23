@@ -1,70 +1,133 @@
 <template>
-  <div class="w-full h-full">
-    <canvas ref="canvas" class="w-full h-full"></canvas>
+  <div class="chart-container">
+    <canvas ref="canvasEl"></canvas>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch, onBeforeUnmount } from 'vue'
-import Chart from 'chart.js/auto'
-import ChartDataLabels from 'chartjs-plugin-datalabels'
-
-Chart.register(ChartDataLabels)
+import { onMounted, onBeforeUnmount, watch, ref } from "vue";
+import Chart from "chart.js/auto";
+import { getCategoryColor } from "@/utils/categoryColors";
 
 const props = defineProps({
-  type: { type: String, required: true },
+  type: { type: String, default: "doughnut" },
   labels: { type: Array, default: () => [] },
   datasets: { type: Array, default: () => [] },
-  options: { type: Object, default: () => ({}) }
-})
+});
 
-const emit = defineEmits(['ready'])
-const canvas = ref(null)
-let chart = null
+const canvasEl = ref(null);
+let chart = null;
 
-function buildConfig() {
-  // clone datasets to avoid mutation side effects
-  const datasets = props.datasets.map(ds => ({ ...ds }))
-  return {
-    type: props.type,
-    data: { labels: props.labels, datasets },
-    options: {
-      ...props.options,
-      plugins: {
-        datalabels: { display: false },
-        ...(props.options.plugins || {})
-      }
-    }
+// remove undefined / null
+function sanitize(arr) {
+  return arr.map((v) => (v == null || isNaN(v) ? 0 : Number(v)));
+}
+
+function buildColors(labels) {
+  return labels.map((label) => getCategoryColor(label));
+}
+
+function render() {
+  if (!canvasEl.value) return;
+  const ctx = canvasEl.value.getContext("2d");
+
+  if (chart) chart.destroy();
+
+  const safeLabels = props.labels.map((l) => l ?? "—");
+  const bg = buildColors(safeLabels);
+
+  const ds = props.datasets.map((d) => ({
+    ...d,
+    data: sanitize(d.data ?? []),
+    backgroundColor: bg,
+    borderWidth: 0,
+  }));
+
+  // 🔥 RADAR fix — precisa borda e pontos
+  if (props.type === "radar") {
+    ds.forEach((set, i) => {
+      set.borderColor = bg[i] || "#38bdf8";
+      set.pointBackgroundColor = bg[i] || "#38bdf8";
+      set.pointBorderColor = "#fff";
+      set.borderWidth = 2;
+      set.fill = true;
+    });
   }
+
+  // 🔥 LINE fix — linha roxa gigante + animação quebrando
+  if (props.type === "line") {
+    ds.forEach((set, i) => {
+      set.borderColor = bg[i] || "#38bdf8";
+      set.backgroundColor = (bg[i] || "#38bdf8") + "40";
+      set.fill = false;
+      set.tension = 0.3;
+    });
+  }
+
+  // 🔥 POLAR fix — aceita undefined e precisa borda mínima
+  if (props.type === "polarArea") {
+    ds.forEach((set) => {
+      set.borderWidth = 1;
+      set.borderColor = "#0f172a";
+    });
+  }
+
+  chart = new Chart(ctx, {
+    type: props.type,
+    data: {
+      labels: safeLabels,
+      datasets: ds,
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false, // 🔥 impede animação descendo
+
+      plugins: {
+        legend: {
+          display: true,
+          position: "bottom",
+          labels: { color: "#e2e8f0" },
+        },
+      },
+
+      // 🔥 escalas apenas para bar / line
+      scales:
+        props.type === "bar" || props.type === "line"
+          ? {
+              y: {
+                beginAtZero: true,
+                ticks: { color: "#cbd5e1" },
+                grid: { color: "#1e293b" },
+              },
+              x: {
+                ticks: { color: "#cbd5e1" },
+                grid: { color: "#1e293b" },
+              },
+            }
+          : {},
+    },
+  });
 }
 
-function renderChart() {
-  if (!canvas.value) return
-  if (chart) chart.destroy()
-  const cfg = buildConfig()
-  chart = new Chart(canvas.value.getContext('2d'), cfg)
-  emit('ready', chart)
+watch(() => props, render, { deep: true });
+onMounted(render);
+onBeforeUnmount(() => chart?.destroy());
+
+function downloadImage() {
+  const link = document.createElement("a");
+  link.href = chart.toBase64Image();
+  link.download = "grafico.png";
+  link.click();
 }
 
-watch(() => [props.type, props.labels, props.datasets, props.options], () => {
-  renderChart()
-}, { deep: true })
-
-onMounted(renderChart)
-onBeforeUnmount(() => { if (chart) chart.destroy() })
-
-// methods to be used by parent via ref
-const downloadImage = () => {
-  if (!chart) return
-  const link = document.createElement('a')
-  link.href = chart.toBase64Image()
-  link.download = `relatorio-${Date.now()}.png`
-  link.click()
-}
-
-defineExpose({ downloadImage, getChart: () => chart })
+defineExpose({ downloadImage });
 </script>
 
 <style scoped>
-canvas { width: 100% !important; height: 100% !important; }
+.chart-container {
+  width: 100%;
+  height: 420px; /* 🔥 tamanho fixo evita gráfico gigante */
+  position: relative;
+}
 </style>

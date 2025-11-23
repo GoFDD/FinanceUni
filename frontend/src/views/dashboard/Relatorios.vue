@@ -51,9 +51,6 @@
               <option value="doughnut">Donut</option>
               <option value="pie">Pizza</option>
               <option value="bar">Barras</option>
-              <option value="line">Linha</option>
-              <option value="radar">Radar</option>
-              <option value="polarArea">Polar</option>
             </select>
 
             <button @click="downloadPNG" class="px-2 py-1 text-sm bg-slate-800 rounded-md">
@@ -109,11 +106,6 @@
       <div class="bg-slate-900/60 p-4 rounded-xl">
         <h5 class="text-sm font-semibold mb-2">Top categorias</h5>
         <chart-wrapper :type="'bar'" :labels="miniCharts.topLabels" :datasets="miniCharts.topDataset" class="h-44" />
-      </div>
-
-      <div class="bg-slate-900/60 p-4 rounded-xl">
-        <h5 class="text-sm font-semibold mb-2">Por categoria (polar)</h5>
-        <chart-wrapper :type="'polarArea'" :labels="miniCharts.topLabels" :datasets="miniCharts.topDataset" class="h-44" />
       </div>
 
     </div>
