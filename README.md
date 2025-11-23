@@ -114,7 +114,6 @@ Justificativa: **evitam vazamento de lógica e padronizam transporte entre camad
 - Validação forte nas requests
 - Scopes `fromUser()` prevenindo acesso indevido
 - Middlewares de CORS
-- Sanitização automática (Trim, ConvertEmptyStringsToNull)
 
 ### 🛡 Melhorias recomendadas
 
