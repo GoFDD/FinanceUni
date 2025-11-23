@@ -187,7 +187,7 @@
         <div class="bg-slate-900/60 border border-slate-700 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-lg">
           <div class="flex justify-between items-center mb-4 md:mb-6">
             <h2 class="text-lg md:text-xl font-semibold text-gray-100">Conquistas</h2>
-            <router-link to="/conquistas" class="text-blue-400 text-xs md:text-sm hover:underline transition">
+            <router-link to="/dashboard/perfil" class="text-blue-400 text-xs md:text-sm hover:underline transition">
               Ver todas
             </router-link>
           </div>

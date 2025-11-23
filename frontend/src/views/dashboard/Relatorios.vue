@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-[#0B1220] text-white p-6 md:p-10 space-y-6">
+  <div class="min-h-screen bg-[#0e100912] text-white p-6 md:p-10 space-y-6">
     
     <!-- HEADER -->
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
