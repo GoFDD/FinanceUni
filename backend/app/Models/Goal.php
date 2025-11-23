@@ -19,7 +19,9 @@ class Goal extends Model
         'current_value',
         'xp_reward',
         'grants_achievement',
-        'status'
+        'status',
+        'start_date',
+        'end_date',
     ];
 
     protected $casts = [

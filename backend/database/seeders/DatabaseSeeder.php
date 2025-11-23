@@ -9,10 +9,13 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            UserSeeder::class,
+            AchievementsSeeder::class,
         ]);
         $this->call([
-            AchievementsSeeder::class,
+            CategorySeeder::class,
+        ]);
+        $this->call([
+            ExpenseBaseCategoriesSeeder::class,
         ]);
     }
 }

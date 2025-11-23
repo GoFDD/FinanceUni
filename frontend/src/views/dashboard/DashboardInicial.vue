@@ -24,7 +24,8 @@
 
     <!-- Dashboard Content -->
     <div v-else class="p-4 md:p-6 lg:p-8 space-y-6 md:space-y-8">
-      <!-- Header do Usuário -->
+      
+      <!-- ====================== HEADER DO USUÁRIO ====================== -->
       <div class="bg-slate-900/60 border border-slate-700 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-lg">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-6">
           <div class="w-full md:w-auto">
@@ -45,13 +46,12 @@
           </div>
         </div>
 
-        <!-- Info de Progresso -->
+        <!-- XP BAR -->
         <div class="mt-4 md:mt-5">
           <p class="text-xs md:text-sm text-gray-400 mb-2">
             {{ xpInCurrentLevel }} / {{ xpToNextLevel }} XP para o próximo nível
           </p>
           
-          <!-- Barra de XP -->
           <div class="relative w-full h-3 md:h-4 bg-slate-800 rounded-full overflow-hidden shadow-inner">
             <div
               class="h-full bg-gradient-to-r from-emerald-400 via-blue-500 to-cyan-400
@@ -59,7 +59,6 @@
               :style="{ width: xpProgress + '%' }"
             ></div>
 
-            <!-- Brilho de movimento -->
             <div
               class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent
                     animate-[shine_3s_linear_infinite]"
@@ -68,7 +67,7 @@
         </div>
       </div>
 
-      <!-- Cards de Resumo -->
+      <!-- ====================== CARDS RESUMO ====================== -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         <div
           v-for="card in cardsResumo"
@@ -99,25 +98,32 @@
         </div>
       </div>
 
-      <!-- Conteúdo Principal -->
+      <!-- ====================== COLUNAS PRINCIPAIS ====================== -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-        <!-- Coluna de Metas -->
+
+        <!-- === METAS === -->
         <div class="lg:col-span-2 bg-slate-900/60 border border-slate-700 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-lg">
           <div class="flex justify-between items-center mb-4 md:mb-6">
             <h2 class="text-lg md:text-xl font-semibold text-gray-100">Metas Ativas</h2>
-            <button class="bg-blue-600 hover:bg-blue-700 text-white text-xs md:text-sm px-3 md:px-4 py-1.5 md:py-2 rounded-full transition">
+            <button 
+              @click="showModalMeta = true"
+              class="bg-blue-600 hover:bg-blue-700 text-white text-xs md:text-sm px-3 md:px-4 py-1.5 md:py-2 rounded-full transition"
+            >
               + Nova Meta
             </button>
+              <CriarMeta 
+                :visible="showModalMeta"
+                @close="showModalMeta = false"
+                @created="loadDashboard"
+              />
           </div>
 
-          <!-- Estado Vazio -->
           <div v-if="metas.length === 0" class="text-center py-12">
             <Target class="w-16 h-16 text-gray-600 mx-auto mb-4" />
             <p class="text-gray-400 text-base">Nenhuma meta ativa no momento</p>
             <p class="text-sm text-gray-500 mt-1">Crie sua primeira meta para começar!</p>
           </div>
 
-          <!-- Lista de Metas -->
           <div
             v-else
             class="space-y-4 overflow-y-auto max-h-[400px] pr-2 scrollbar-thin scrollbar-thumb-slate-700"
@@ -127,6 +133,7 @@
               :key="meta.id"
               class="bg-slate-800/50 border border-slate-700 rounded-xl p-4 hover:bg-slate-800/70 transition"
             >
+
               <div class="flex justify-between items-start mb-3">
                 <div class="flex items-center gap-2 flex-1 min-w-0">
                   <component :is="meta.icone" class="w-5 h-5 text-emerald-400 flex-shrink-0" />
@@ -151,7 +158,6 @@
                 <span>R$ {{ meta.restante }} restantes</span>
               </div>
 
-              <!-- Progress Bar -->
               <div class="w-full h-3 bg-slate-700 rounded-full overflow-hidden mb-3">
                 <div
                   class="h-full bg-gradient-to-r from-emerald-500 to-blue-500 transition-all duration-500"
@@ -165,9 +171,8 @@
                   <span class="truncate">{{ meta.recompensaXP }} XP + "{{ meta.recompensaNome }}"</span>
                 </div>
                 
-                <!-- Botão Completar (se estiver em 100%) -->
                 <button 
-                  v-if="meta.percentual >= 100"
+                  v-if="meta.percentual >= 100 && meta.tipo === 'sistema'"
                   @click="completarMeta(meta.id)"
                   class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-xs transition flex-shrink-0 ml-2"
                 >
@@ -178,29 +183,22 @@
           </div>
         </div>
 
-        <!-- Coluna de Conquistas -->
+        <!-- === CONQUISTAS === -->
         <div class="bg-slate-900/60 border border-slate-700 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-lg">
           <div class="flex justify-between items-center mb-4 md:mb-6">
             <h2 class="text-lg md:text-xl font-semibold text-gray-100">Conquistas</h2>
-            <router-link 
-              to="/conquistas" 
-              class="text-blue-400 text-xs md:text-sm hover:underline transition"
-            >
+            <router-link to="/conquistas" class="text-blue-400 text-xs md:text-sm hover:underline transition">
               Ver todas
             </router-link>
           </div>
 
-          <!-- Estado Vazio -->
           <div v-if="conquistas.length === 0" class="text-center py-12">
             <Award class="w-16 h-16 text-gray-600 mx-auto mb-4" />
             <p class="text-gray-400 text-base">Nenhuma conquista disponível</p>
           </div>
 
-          <!-- Lista de Conquistas -->
-          <div
-            v-else
-            class="space-y-4 overflow-y-auto max-h-[400px] pr-2 scrollbar-thin scrollbar-thumb-slate-700"
-          >
+          <div v-else class="space-y-4 overflow-y-auto max-h-[400px] pr-2 scrollbar-thin scrollbar-thumb-slate-700">
+            
             <div
               v-for="conquista in conquistasLimitadas"
               :key="conquista.id"
@@ -210,23 +208,26 @@
                 'border-dashed border-slate-600 opacity-60': conquista.status === 'bloqueado',
               }"
             >
+
               <div class="flex items-start justify-between gap-3">
+
                 <div class="flex items-start gap-3 flex-1 min-w-0">
                   <component
-                    :is="conquista.icone"
+                    :is="getIconComponent(conquista.icone)"
                     class="w-5 h-5 flex-shrink-0 mt-0.5"
                     :class="conquista.status === 'bloqueado' ? 'text-gray-500' : 'text-yellow-400'"
                   />
+
                   <div class="flex-1 min-w-0">
                     <h3 class="font-semibold text-gray-100 text-sm md:text-base truncate">
                       {{ conquista.nome }}
                     </h3>
+
                     <p class="text-xs md:text-sm text-gray-400 line-clamp-2">
                       {{ conquista.descricao }}
                     </p>
-                    
-                    <!-- Barra de Progresso (se em progresso) -->
-                    <div v-if="conquista.status === 'progresso'" class="mt-2">
+
+                    <div v-if="conquista.progress > 0 && conquista.progress < 100" class="mt-2">
                       <div class="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
                         <div
                           class="h-full bg-yellow-500 transition-all duration-500"
@@ -235,23 +236,76 @@
                       </div>
                       <p class="text-xs text-gray-500 mt-1">{{ conquista.progress }}% completo</p>
                     </div>
+
+                    <!-- Mostrar barra 100% quando progress === 100 (mas ainda não coletado) -->
+                    <div v-if="conquista.progress >= 100" class="mt-2">
+                      <div class="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
+                        <div
+                          class="h-full bg-yellow-500 transition-all duration-500"
+                          :style="{ width: '100%' }"
+                        ></div>
+                      </div>
+                      <p class="text-xs text-gray-500 mt-1">100% completo</p>
+                    </div>
                   </div>
                 </div>
 
-                <span
-                  class="text-xs font-medium px-2 md:px-3 py-1 rounded-full whitespace-nowrap flex-shrink-0"
-                  :class="{
-                    'bg-green-500/20 text-green-400': conquista.status === 'completo',
-                    'bg-yellow-500/20 text-yellow-400': conquista.status === 'progresso',
-                    'bg-slate-600/30 text-gray-400': conquista.status === 'bloqueado',
-                  }"
-                >
-                  {{ conquista.statusLabel }}
-                </span>
+                <div class="flex flex-col items-end gap-2">
+
+                  <span
+                    class="text-xs font-medium px-2 md:px-3 py-1 rounded-full whitespace-nowrap flex-shrink-0"
+                    :class="{
+                      'bg-green-500/20 text-green-400': conquista.status === 'completo',
+                      'bg-yellow-500/20 text-yellow-400': conquista.status === 'progresso',
+                      'bg-slate-600/30 text-gray-400': conquista.status === 'bloqueado',
+                    }"
+                  >
+                    {{ conquista.statusLabel }}
+                  </span>
+
+                  <!--  PEGAR RECOMPENSA: mostra quando progresso chegou a 100% e unlocked_at é null -->
+                  <button
+                    v-if="conquista.progress >= 100 && !conquista.unlocked_at"
+                    @click="handleCollectAchievement(conquista)"
+                    class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1 rounded-full transition"
+                  >
+                    Pegar recompensa
+                  </button>
+
+                </div>
+
               </div>
+
             </div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- ====================== MODAL CONQUISTA ====================== -->
+    <div 
+      v-if="modalConquista" 
+      class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4"
+    >
+      <div class="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-md text-center shadow-xl">
+        <Trophy class="w-16 h-16 text-yellow-400 mx-auto mb-4" />
+
+        <h3 class="text-2xl font-bold text-white mb-2">
+          Conquista desbloqueada!
+        </h3>
+
+        <p class="text-gray-300 mb-2">{{ modalConquista.nome }}</p>
+
+        <p class="text-gray-400 text-sm mb-4">
+          Você ganhou {{ modalConquista.xp_reward ?? modalConquista.xpEarned ?? 0 }} XP
+        </p>
+
+        <button 
+          @click="closeAchievementModal" 
+          class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+        >
+          Continuar
+        </button>
       </div>
     </div>
   </div>
@@ -259,8 +313,13 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import DashboardService from '@/services/dashboardService'
-import { Trophy, PiggyBank, Gamepad2, Wallet, Target, Award } from 'lucide-vue-next'
+import dashboardService from '@/services/dashboardService'
+import CriarMeta from '@/components/modals/CriarMeta.vue'
+import confetti from 'canvas-confetti'
+
+import { 
+  Trophy, PiggyBank, Gamepad2, Wallet, Target, Award 
+} from 'lucide-vue-next'
 
 // ====== ESTADOS ======
 const user = ref({
@@ -276,17 +335,21 @@ const streak = ref({
   last_login: null,
 })
 
+const showModalMeta = ref(false)
 const metas = ref([])
 const conquistas = ref([])
 const resumo = ref({})
 const loading = ref(true)
 const error = ref(null)
 
-// ====== CÁLCULO DE PROGRESSO ======
-const xpToNextLevel = computed(() => 1000) // 1000 XP por nível
+const modalConquista = ref(null)
+
+// ====== XP ======
+const xpToNextLevel = computed(() => 1000)
 
 const xpInCurrentLevel = computed(() => {
-  return user.value.xp % 1000
+  const xp = user.value?.xp ?? 0
+  return xp % xpToNextLevel.value
 })
 
 const xpProgress = computed(() => {
@@ -294,18 +357,46 @@ const xpProgress = computed(() => {
   return Math.min(Math.max(progress, 0), 100)
 })
 
-// ====== CONQUISTAS LIMITADAS (mostrar apenas 5) ======
-const conquistasLimitadas = computed(() => {
-  return conquistas.value.slice(0, 5)
-})
+// ====== LIMITAR CONQUISTAS ======
+const conquistasLimitadas = computed(() => conquistas.value.slice(0, 5))
 
-// ====== BUSCA DE DADOS ======
+// ====== MAPEAR ÍCONES =========
+// Simplificado — se quiser mapear mais, depois eu gero o grande mapa
+function getIconComponent(name) {
+  const icons = {
+    first_login: Trophy,
+    first_goal: PiggyBank,
+    streak_7: Gamepad2,
+    streak_30: Gamepad2,
+    streak_100: Gamepad2,
+    goal_complete: Trophy,
+    invest_1: Wallet,
+    goal_master: Trophy,
+  }
+  return icons[name] || Trophy
+}
+
+// ====== CONFETTI ======
+function triggerConfetti() {
+  confetti({
+    particleCount: 150,
+    spread: 70,
+    origin: { y: 0.6 },
+  })
+}
+
+// ====== MODAL ======
+function closeAchievementModal() {
+  modalConquista.value = null
+}
+
+// ====== BUSCAR DASHBOARD ======
 async function loadDashboard() {
   try {
     loading.value = true
     error.value = null
 
-    const data = await DashboardService.getDashboardData()
+    const data = await dashboardService.getDashboardData()
 
     user.value = data.user
     streak.value = data.streak
@@ -313,7 +404,6 @@ async function loadDashboard() {
     metas.value = data.metas
     resumo.value = data.resumo
 
-    console.log('✅ Dashboard carregado com sucesso:', data)
   } catch (err) {
     console.error('❌ Erro ao carregar dashboard:', err)
     error.value = err.message || 'Erro ao carregar dashboard'
@@ -322,34 +412,51 @@ async function loadDashboard() {
   }
 }
 
-// ====== RECARREGAR DASHBOARD ======
 function reloadDashboard() {
   loadDashboard()
 }
 
+
 // ====== COMPLETAR META ======
-async function completarMeta(goalId) {
+async function completarMeta(id) {
   try {
-    const response = await DashboardService.completeGoal(goalId)
-    console.log('✅ Meta completada:', response)
-    
-    // Recarrega o dashboard para atualizar os dados
+    // usar dashboardService (import correto)
+    await dashboardService.completeGoal(id)
     await loadDashboard()
-    
-    // Você pode adicionar uma notificação de sucesso aqui
-    alert(`Meta completada! Você ganhou ${response.xp_earned} XP!`)
-  } catch (err) {
-    console.error('❌ Erro ao completar meta:', err)
-    alert('Erro ao completar meta: ' + (err.message || 'Erro desconhecido'))
+  } catch (e) {
+    console.error(e)
+    alert('Erro ao completar meta.')
   }
 }
 
-// ====== CARREGAR AO MONTAR ======
-onMounted(() => {
-  loadDashboard()
-})
 
-// ====== CARDS RESUMO ======
+// ====== COLETAR CONQUISTA ======
+async function handleCollectAchievement(conquista) {
+  try {
+    const res = await dashboardService.unlockAchievement(conquista.id)
+
+    // res pode conter xp_earned ou achievement info
+    const xpEarned = res.xp_earned ?? res.achievement?.xp_reward ?? res.xp ?? 0
+
+    // animacao
+    triggerConfetti()
+
+    // mostrar modal com xp recebido
+    modalConquista.value = {
+      nome: conquista.nome,
+      xpEarned,
+      xp_reward: xpEarned
+    }
+
+    await loadDashboard()
+  } catch (e) {
+    console.error(e)
+    alert('Erro ao coletar recompensa.')
+  }
+}
+
+
+// ====== CARD RESUMO ======
 const cardsResumo = computed(() => [
   {
     titulo: 'Saldo Total',
@@ -376,6 +483,8 @@ const cardsResumo = computed(() => [
     icone: Gamepad2,
   },
 ])
+
+onMounted(() => loadDashboard())
 </script>
 
 <style scoped>

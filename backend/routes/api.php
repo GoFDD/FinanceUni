@@ -5,6 +5,9 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GamificationController;
 use App\Http\Controllers\PluggyController;
+use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ReportController;
 use Illuminate\Http\Request;
 
 // ==========================================
@@ -56,20 +59,23 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // ========== DASHBOARD ==========
     Route::get('/dashboard', [DashboardController::class, 'index']);
-    
+    Route::post('/goals', [GamificationController::class, 'createUserGoal']);
+
     // ========== GAMIFICAÇÃO ==========
-    Route::prefix('gamification')->group(function () {
-        // Dashboard de gamificação (detalhado)
-        Route::get('/dashboard', [GamificationController::class, 'getDashboard']);
-        
-        // Metas
-        Route::get('/system-goals', [GamificationController::class, 'listSystemGoals']);
-        Route::get('/user-goals', [GamificationController::class, 'listUserGoals']);
-        Route::post('/goals/{goal}/complete', [GamificationController::class, 'completeGoal']);
-        
-        // Conquistas
-        Route::get('/achievements', [GamificationController::class, 'listAchievements']);
-    });
+Route::prefix('gamification')->group(function () {
+
+    // Listar conquistas
+    Route::get('/achievements', [GamificationController::class, 'listAchievements']);
+    // Coletar recompensa de conquista
+    Route::post('/achievements/{id}/unlock', [GamificationController::class, 'unlock']);
+    // Listar metas
+    Route::get('/goals', [GamificationController::class, 'listGoals']);
+    // Completar meta
+    Route::post('/goals/{id}/complete', [GamificationController::class, 'completeGoal']);
+    // Criar meta pessoal
+    Route::post('/goals', [GamificationController::class, 'createUserGoal']);
+});
+
 
     // Pluggy
     Route::prefix('pluggy')->group(function () {
@@ -79,4 +85,22 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/accounts/{accountId}', [PluggyController::class, 'deleteAccount']);
     });
 
+    // TRANSACTIONS
+    Route::get('/transactions', [TransactionController::class, 'index']);
+    Route::post('/transactions', [TransactionController::class, 'store']);
+    Route::put('/transactions/{id}', [TransactionController::class, 'update']);
+    Route::delete('/transactions/{id}', [TransactionController::class, 'destroy']);
+
+    // SUMMARY
+    Route::get('/transactions/expense-summary', [TransactionController::class, 'expenseSummary']);
+
+    // CATEGORIES
+    Route::get('/categories', [CategoryController::class, 'index']);
+    Route::post('/categories', [CategoryController::class, 'store']);
+    Route::put('/categories/{id}', [CategoryController::class, 'update']);
+    Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
+
+    // REPORTS
+    Route::get("/reports/categories", [ReportController::class, "categories"]);
+    Route::get("/reports", [ReportController::class, "report"]);
 });

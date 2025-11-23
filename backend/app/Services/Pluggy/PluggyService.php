@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Pluggy;
 
 use Illuminate\Support\Facades\Http;
 

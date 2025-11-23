@@ -67,7 +67,7 @@ class AuthController extends Controller
                 return response()->json(['message' => 'Credenciais inválidas.'], 401);
             }
 
-            // 🎮 Adiciona XP ao logar (chama serviço de gamificação)
+            //  Adiciona XP ao logar
             app(\App\Services\GamificationService::class)->handleDailyLogin($result['user']);
 
             return response()->json($result, 200);
